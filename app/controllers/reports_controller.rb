@@ -135,6 +135,7 @@ class ReportsController < ApplicationController
 
       # Spending vs normal (preview): this period against the year before it
       @spending_comparison = build_spending_comparison
+      @category_trends = build_category_trends
 
       # Investment flows (contributions/withdrawals)
       @investment_flows = InvestmentFlowStatement.new(Current.family, user: Current.user).period_totals(period: @period)
@@ -178,6 +179,15 @@ class ReportsController < ApplicationController
           partial: "reports/spending_vs_normal",
           locals: { comparison: @spending_comparison, start_date: @start_date, end_date: @end_date },
           visible: @has_accounts && @spending_comparison.present?,
+          collapsible: true,
+          preview: true
+        },
+        {
+          key: "category_trends",
+          title: "reports.category_trends.title",
+          partial: "reports/category_trends",
+          locals: { trends: @category_trends, start_date: @start_date, end_date: @end_date },
+          visible: @has_accounts && @category_trends.present?,
           collapsible: true,
           preview: true
         },
@@ -341,6 +351,12 @@ class ReportsController < ApplicationController
         period: @period,
         history_start: IncomeStatement::SpendingComparison.history_start(@income_statement)
       )
+    end
+
+    def build_category_trends
+      return nil unless preview_features_enabled?
+
+      IncomeStatement::CategoryTrends.new(@income_statement, end_date: @end_date)
     end
 
     def build_trends_data(income_statement:)

@@ -130,6 +130,15 @@ en:
           other: Showing %{count} entries
         previous: Previous
         next: Next
+    category_trends:
+      title: Category trends
+      summary: "Monthly spending per category over the %{count} months from %{start} to %{end}, each chart on its own scale."
+      partial_month: The latest month is still in progress.
+      no_spending: No spending in these months.
+      peak: "peak %{amount}"
+      average: "Monthly average %{amount}"
+      legend: The flat line is the category's monthly average. The shaded band is the selected period. Hover a chart, or focus it and use the arrow keys, to read a month.
+      panel_aria: "%{category}: average %{average} a month, peak %{peak} in %{peak_month}, %{latest} in %{latest_month}."
     net_worth:
       title: Net Worth
       current_net_worth: Current Net Worth
