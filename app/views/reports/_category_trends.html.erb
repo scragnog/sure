@@ -1,0 +1,59 @@
+<%# locals: (trends:, start_date:, end_date:) %>
+<%
+  currency = Current.family.currency
+  whole = ->(amount) { Money.new(amount, currency).format(precision: 0) }
+  month_label = ->(month) { l(month, format: "%b %Y") }
+  months = trends.months
+  selected = months.each_index.select { |i| months[i] <= end_date && months[i].end_of_month >= start_date }
+%>
+<div class="@container space-y-3">
+  <p class="text-sm text-secondary">
+    <%= t("reports.category_trends.summary", count: months.size, start: month_label.call(months.first), end: month_label.call(months.last)) %>
+    <% if trends.partial_last_month? %>
+      <%= t("reports.category_trends.partial_month") %>
+    <% end %>
+  </p>
+
+  <% if trends.series.empty? %>
+    <p class="text-sm text-secondary py-6 text-center"><%= t("reports.category_trends.no_spending") %></p>
+  <% else %>
+    <ul class="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-4 gap-3" data-testid="category-trends">
+      <% trends.series.each do |series| %>
+        <% peak_index = series.values.index(series.peak) %>
+        <li class="rounded-lg shadow-border-xs bg-container p-3 min-w-0">
+          <div class="flex items-baseline justify-between gap-2 mb-1">
+            <%= link_to series.category.name,
+                  transactions_path(q: { categories: [ series.category.filter_value ], start_date: start_date, end_date: end_date }),
+                  class: "text-sm font-medium text-primary truncate hover:underline" %>
+            <span class="text-xs text-secondary whitespace-nowrap privacy-sensitive">
+              <%= t("reports.category_trends.peak", amount: whole.call(series.peak)) %>
+            </span>
+          </div>
+          <div class="privacy-sensitive"
+               data-controller="category-trend"
+               data-category-trend-points-value="<%= months.each_with_index.map { |m, i| { label: month_label.call(m), value: series.values[i].to_f, display: whole.call(series.values[i]) } }.to_json %>"
+               data-category-trend-average-value="<%= series.average.to_f %>"
+               data-category-trend-average-label-value="<%= t("reports.category_trends.average", amount: whole.call(series.average)) %>"
+               data-category-trend-selected-value="<%= [ selected.first, selected.last ].to_json %>"
+               data-category-trend-name-value="<%= series.category.name %>"
+               tabindex="0"
+               role="img"
+               aria-label="<%= t("reports.category_trends.panel_aria",
+                                 category: series.category.name,
+                                 average: whole.call(series.average),
+                                 peak: whole.call(series.peak),
+                                 peak_month: month_label.call(months[peak_index]),
+                                 latest: whole.call(series.values.last),
+                                 latest_month: month_label.call(months.last)) %>">
+            <div class="h-20 w-full" data-category-trend-target="chart"></div>
+            <div class="flex justify-between text-xs text-subdued mt-0.5" aria-hidden="true">
+              <span><%= month_label.call(months.first) %></span>
+              <span><%= month_label.call(months.last) %></span>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+    <p class="text-xs text-subdued"><%= t("reports.category_trends.legend") %></p>
+  <% end %>
+</div>

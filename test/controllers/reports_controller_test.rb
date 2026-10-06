@@ -137,6 +137,17 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal own_first, baseline.start_date
   end
 
+  test "category trends is a preview section" do
+    @user.update!(preferences: (@user.preferences || {}).merge("preview_features_enabled" => false))
+    get reports_path
+    assert_select "section[data-section-key='category_trends']", count: 0
+
+    @user.update!(preferences: @user.preferences.merge("preview_features_enabled" => true))
+    get reports_path
+    assert_response :ok
+    assert_select "section[data-section-key='category_trends']"
+  end
+
   # The desktop app clones these into the tray when a download such as the CSV
   # export ends, since it has no download list of its own, and reads their data
   # attributes for its native notification.
